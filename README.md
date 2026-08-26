@@ -291,7 +291,8 @@ Summarize your findings.
 ├── .mcp.json             # MCP server entry for VS Code / Claude Code
 ├── .cursor/
 │   └── mcp.json          # MCP server entry for Cursor
-├── compose.yaml          # Docker Compose: app + mariadb + neo4j services
+├── compose.yaml          # Docker Compose: app + mariadb + neo4j services (also docker-compose.yml)
+├── docker-compose.yml    # Compatibility alias for Docker Compose v1 / legacy CLI
 ├── Dockerfile            # PHP 8.4-cli + Node 22 + pnpm + composer
 ├── composer.json         # neo4j/laravel-boost listed in require-dev
 └── vendor/
