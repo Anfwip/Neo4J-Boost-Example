@@ -99,6 +99,8 @@ This starts three containers:
 | `koel-database` | MariaDB 10.11, Koel's relational data |
 | `neo4j-boost-example` | Neo4j 5 Community, graph DB, Browser on `http://localhost:7474` |
 
+> **Troubleshooting Note:** If Docker reports port conflicts (e.g. ports `7474`/`7687` already bound by `neo4j-laravel-neo4j-1`) or orphan containers, stop conflicting containers via `docker stop <container_name>` and run `docker compose up -d --build --remove-orphans`.
+
 ### 6. Run migrations
 
 ```bash
