@@ -15,18 +15,25 @@ use Webmozart\Assert\Assert;
  *
  * @param string|null $name The optional resource name/path
  */
+if (!function_exists('static_url')) {
 function static_url(?string $name = null): string
 {
     $cdnUrl = trim(config('koel.cdn.url'), '/ ');
 
     return $cdnUrl ? $cdnUrl . '/' . trim(ltrim($name, '/')) : trim(asset($name));
 }
+}
 
+
+if (!function_exists('base_url')) {
 function base_url(): string
 {
     return app()->runningUnitTests() ? config('app.url') : asset('');
 }
+}
 
+
+if (!function_exists('image_storage_path')) {
 function image_storage_path(?string $fileName, ?string $default = null, bool $ensureDirectoryExists = true): ?string
 {
     if (!$fileName) {
@@ -41,12 +48,18 @@ function image_storage_path(?string $fileName, ?string $default = null, bool $en
 
     return $path;
 }
+}
 
+
+if (!function_exists('image_storage_url')) {
 function image_storage_url(?string $fileName, ?string $default = null): ?string
 {
     return $fileName ? static_url(config('koel.image_storage_dir') . '/' . $fileName) : $default;
 }
+}
 
+
+if (!function_exists('artifact_path')) {
 function artifact_path(?string $subPath = null, $ensureDirectoryExists = true): string
 {
     $path = Str::finish(config('koel.artifacts_path'), DIRECTORY_SEPARATOR);
@@ -61,22 +74,34 @@ function artifact_path(?string $subPath = null, $ensureDirectoryExists = true): 
 
     return $path;
 }
+}
 
+
+if (!function_exists('koel_version')) {
 function koel_version(): string
 {
     return trim(File::get(base_path('.version')));
 }
+}
 
+
+if (!function_exists('rescue_if')) {
 function rescue_if($condition, callable $callback, $default = null): mixed
 {
     return value($condition) ? rescue($callback, $default) : $default;
 }
+}
 
+
+if (!function_exists('rescue_unless')) {
 function rescue_unless($condition, callable $callback, $default = null): mixed
 {
     return rescue_if(!$condition, $callback, $default);
 }
+}
 
+
+if (!function_exists('gravatar')) {
 function gravatar(string $email, int $size = 192): string
 {
     $query = http_build_query([
@@ -86,7 +111,10 @@ function gravatar(string $email, int $size = 192): string
 
     return sprintf('%s/%s?%s', config('services.gravatar.url'), hash('sha256', Str::lower(trim($email))), $query);
 }
+}
 
+
+if (!function_exists('avatar_or_gravatar')) {
 function avatar_or_gravatar(?string $avatar, string $email): string
 {
     if (!$avatar) {
@@ -99,17 +127,23 @@ function avatar_or_gravatar(?string $avatar, string $email): string
 
     return image_storage_url($avatar);
 }
+}
+
 
 /**
  * A quick check to determine if a mailer is configured.
  * This is not bulletproof but should work in most cases.
  */
+if (!function_exists('mailer_configured')) {
 function mailer_configured(): bool
 {
     return config('mail.default') && !in_array(config('mail.default'), ['log', 'array'], true);
 }
+}
+
 
 /** @return array<string> */
+if (!function_exists('collect_sso_providers')) {
 function collect_sso_providers(): array
 {
     if (License::isCommunity()) {
@@ -132,7 +166,10 @@ function collect_sso_providers(): array
 
     return $providers;
 }
+}
 
+
+if (!function_exists('get_mtime')) {
 function get_mtime(string|SplFileInfo $path): int
 {
     $path = is_string($path) ? $path : $path->getPathname();
@@ -140,32 +177,44 @@ function get_mtime(string|SplFileInfo $path): int
     // Workaround for #344, where getMTime() fails for certain files with Unicode names on Windows.
     return rescue(static fn () => File::lastModified($path)) ?? time();
 }
+}
+
 
 /**
  * Simple, non-cryptographically secure hash function for strings.
  * This is used for generating hashes for identifiers that do not require high security.
  */
+if (!function_exists('simple_hash')) {
 function simple_hash(?string $string): string
 {
     return md5("koel-hash:$string");
 }
+}
 
+
+if (!function_exists('is_image')) {
 function is_image(string $path): bool
 {
     return rescue(static fn () => (bool) exif_imagetype($path)) ?? false;
 }
+}
+
 
 /**
  * @param string|int ...$parts
  */
+if (!function_exists('cache_key')) {
 function cache_key(...$parts): string
 {
     return simple_hash(implode('.', $parts));
 }
+}
+
 
 /**
  * @return array<string>
  */
+if (!function_exists('collect_accepted_audio_extensions')) {
 function collect_accepted_audio_extensions(): array
 {
     return array_values(
@@ -176,7 +225,10 @@ function collect_accepted_audio_extensions(): array
             ->toArray(),
     );
 }
+}
 
+
+if (!function_exists('find_ffmpeg_path')) {
 function find_ffmpeg_path(): ?string
 {
     // for Unix-like systems, we can use the `which` command
@@ -210,7 +262,10 @@ function find_ffmpeg_path(): ?string
 
     return null;
 }
+}
 
+
+if (!function_exists('koel_branding')) {
 function koel_branding(?string $key = null): Branding|string|null
 {
     Assert::inArray($key, [null, 'name', 'logo', 'cover']);
@@ -228,8 +283,13 @@ function koel_branding(?string $key = null): Branding|string|null
 
     return Arr::get($branding->toArray(), $key);
 }
+}
 
+
+if (!function_exists('http_user_agent')) {
 function http_user_agent(): string
 {
     return 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36';
 }
+}
+

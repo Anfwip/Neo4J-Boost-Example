@@ -67,7 +67,8 @@
     "laravel/boost": "^2.0",
     "opcodesio/log-viewer": "^3.19",
     "carthage-software/mago": "^1.8.0",
-    "brianium/paratest": "^7.0"
+    "brianium/paratest": "^7.0",
+    "neo4j/laravel-boost": "*"
   },
   "suggest": {
     "ext-zip": "Allow downloading multiple songs as Zip archives"
