@@ -73,16 +73,16 @@ cp .env.example .env
 > The `.env.example` ships with the correct values for Docker Compose (`DB_HOST=database`, `NEO4J_URI=bolt://neo4j:7687`).
 > If you run outside Docker, change `database` → `127.0.0.1` and `neo4j` → `localhost`.
 
-### 3. Generate the app key
-
-```bash
-php artisan key:generate
-```
-
-### 4. Install PHP and JS dependencies
+### 3. Install PHP dependencies
 
 ```bash
 composer install --no-interaction
+```
+
+### 4. Generate the app key
+
+```bash
+php artisan key:generate
 ```
 
 ### 5. Start all containers
@@ -108,15 +108,17 @@ docker compose exec app php artisan migrate --force
 ### 7. Export Koel's container dependency graph into Neo4j
 
 ```bash
-php artisan container:graph
+docker compose exec app php artisan container:graph
 ```
 
 This introspects **1 008 classes, 249 routes, 1 620 middleware links, and 304 bindings** from Koel and writes them into Neo4j as a navigable graph. Subsequent runs are idempotent.
 
+> **Note:** If executing directly on your host machine outside Docker, set `NEO4J_URI=bolt://localhost:7687` in your `.env` file first.
+
 ### 8. Verify the connection
 
 ```bash
-php artisan neo4j-boost:doctor
+docker compose exec app php artisan neo4j-boost:doctor --no-interaction
 ```
 
 Expected output (transport = `driver`, binary = `installed`, password = `set`).
@@ -359,14 +361,14 @@ The `compose.yaml` was updated with a `neo4j` service using `neo4j:5-community` 
 ### Step 6 — Run the setup verification
 
 ```bash
-php artisan neo4j-boost:setup --no-interaction --skip-mcp --no-cursor-config
-php artisan neo4j-boost:doctor
+docker compose exec app php artisan neo4j-boost:setup --no-interaction --skip-mcp --no-cursor-config
+docker compose exec app php artisan neo4j-boost:doctor --no-interaction
 ```
 
 ### Step 7 — Export the container graph
 
 ```bash
-php artisan container:graph
+docker compose exec app php artisan container:graph
 ```
 
 Exports 1 008 classes, 304 bindings, 249 routes, 1 620 middleware links from Koel into Neo4j.
