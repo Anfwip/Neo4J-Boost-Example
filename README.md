@@ -33,14 +33,14 @@ Koel is a free, open-source music-streaming solution built on **Laravel 13** and
 ```
 AI Client (Cursor / Claude Code)
         │
-        ▼  MCP protocol
-php artisan boost:mcp          ← single MCP server entry point
+        ▼  MCP protocol (STDIO via docker compose exec -T app)
+php artisan boost:mcp          ← single MCP server entry point inside app container
         │
         ├── Laravel Boost tools  (routes, code, docs, …)
         │
         └── Neo4j Boost tools    (driver transport, in-process Bolt)
                 │
-                ▼  Bolt / 7687
+                ▼  Bolt / 7687 (internal Docker network: bolt://neo4j:7687)
            Neo4j 5 Community
            (Docker container)
 ```
@@ -111,7 +111,7 @@ docker compose exec app php artisan migrate --force
 docker compose exec app php artisan container:graph
 ```
 
-This introspects **1 008 classes, 249 routes, 1 620 middleware links, and 304 bindings** from Koel and writes them into Neo4j as a navigable graph. Subsequent runs are idempotent.
+This introspects **1 146 classes, 249 routes, 1 620 middleware links, 304 bindings, and 826 static analysis edges** (facades, global helpers, instantiation, service locations) from Koel and writes them into Neo4j as a navigable graph. Subsequent runs are idempotent.
 
 > **Note:** If executing directly on your host machine outside Docker, set `NEO4J_URI=bolt://localhost:7687` in your `.env` file first.
 
@@ -135,11 +135,8 @@ The MCP server entry is **already written** to `.mcp.json` (for Cursor/VS Code) 
 {
   "mcpServers": {
     "laravel-boost": {
-      "command": "php",
-      "args": ["artisan", "boost:mcp"],
-      "env": {
-        "APP_ENV": "local"
-      }
+      "command": "docker",
+      "args": ["compose", "exec", "-T", "app", "php", "artisan", "boost:mcp"]
     }
   }
 }
@@ -333,9 +330,10 @@ NEO4J_URI=bolt://neo4j:7687
 NEO4J_USERNAME=neo4j
 NEO4J_PASSWORD=password
 NEO4J_MCP_TRANSPORT=driver
+NEO4J_CONTAINER_GRAPH_STATIC_SCAN_PATHS=app
 ```
 
-The URI host is `neo4j` (the Docker Compose service name). For non-Docker use, change to `localhost`.
+The URI host is `neo4j` (the Docker Compose service name). For non-Docker use, change to `localhost`. `NEO4J_CONTAINER_GRAPH_STATIC_SCAN_PATHS=app` enables static AST scanning for facades, global helpers, instantiation, and service locator calls inside `app/`.
 
 ### Step 4 — Add Neo4j to Docker Compose
 
@@ -349,8 +347,8 @@ The `compose.yaml` was updated with a `neo4j` service using `neo4j:5-community` 
 {
   "mcpServers": {
     "laravel-boost": {
-      "command": "php",
-      "args": ["artisan", "boost:mcp"]
+      "command": "docker",
+      "args": ["compose", "exec", "-T", "app", "php", "artisan", "boost:mcp"]
     }
   }
 }
@@ -371,7 +369,7 @@ docker compose exec app php artisan neo4j-boost:doctor --no-interaction
 docker compose exec app php artisan container:graph
 ```
 
-Exports 1 008 classes, 304 bindings, 249 routes, 1 620 middleware links from Koel into Neo4j.
+Exports 1 146 classes, 304 bindings, 249 routes, 1 620 middleware links, and 826 static analysis dependency edges from Koel into Neo4j.
 
 ---
 
@@ -389,6 +387,7 @@ NEO4J_URI=bolt://localhost:7687
 NEO4J_USERNAME=neo4j
 NEO4J_PASSWORD=your-password
 NEO4J_MCP_TRANSPORT=driver
+NEO4J_CONTAINER_GRAPH_STATIC_SCAN_PATHS=app
 ' >> .env
 
 # 3. Start a local Neo4j instance (if you don't have one)
