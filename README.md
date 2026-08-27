@@ -54,8 +54,7 @@ The default transport is `driver` — the package runs Cypher queries in PHP ove
 ### Prerequisites
 
 - Docker & Docker Compose
-- PHP 8.3+ and Composer (for local artisan commands / MCP)
-- A Composer `auth.json` at `~/.config/composer/auth.json` (may be empty `{}` if no private packages)
+- PHP 8.3+ and Composer (for local artisan commands / host-side MCP testing)
 
 ### 1. Clone and enter the repo
 
@@ -79,6 +78,8 @@ cp .env.example .env
 composer install --no-interaction
 ```
 
+> **Tip:** If running on a host machine with a different PHP version (e.g. PHP 8.1 or 8.2), append `--ignore-platform-reqs`: `composer install --no-interaction --ignore-platform-reqs`.
+
 ### 4. Generate the app key
 
 ```bash
@@ -91,15 +92,15 @@ php artisan key:generate
 docker compose up -d --build --remove-orphans
 ```
 
-This starts three containers:
+This starts three services:
 
-| Container | Role |
-|-----------|------|
-| `koel-app` | Laravel app, PHP 8.4, serves on `http://localhost:8000` |
-| `koel-database` | MariaDB 10.11, Koel's relational data |
-| `neo4j-boost-example` | Neo4j 5 Community, graph DB, Browser on `http://localhost:7474` |
+| Service | Role |
+|---------|------|
+| `app` | Laravel app, PHP 8.4, serves on `http://localhost:8000` |
+| `database` | MariaDB 10.11, Koel's relational data |
+| `neo4j` | Neo4j 5 Community, graph DB, Browser on `http://localhost:7474` |
 
-> **Troubleshooting Note:** If Docker reports port conflicts (e.g. ports `7474`/`7687` already bound) or container name conflicts (e.g. `koel-app`, `koel-database`, `neo4j-boost-example` already in use), stop and remove conflicting containers via `docker rm -f koel-app koel-database neo4j-boost-example` before starting.
+> **Troubleshooting Note:** If Docker reports port conflicts (e.g. ports `7474`/`7687` or `8000` already bound by existing containers), stop or remove conflicting containers via `docker stop <container_name>` before starting.
 
 ### 6. Run migrations
 
