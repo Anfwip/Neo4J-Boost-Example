@@ -1,0 +1,35 @@
+{
+  "name": "Neo4j Laravel Boost (PHP 8.3 & Node)",
+  "image": "mcr.microsoft.com/devcontainers/php:1-8.3-bullseye",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    }
+  },
+  "postCreateCommand": "cp -n .env.example .env || true && composer install --no-interaction && npm install",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "bmewburn.vscode-intelephense-client",
+        "neo4j-labs.vscode-neo4j-developer-tools",
+        "onecentlin.laravel-blade",
+        "amiralizadeh9480.laravel-extra-intellisense"
+      ]
+    }
+  },
+  "forwardPorts": [8000, 7474, 7687],
+  "portsAttributes": {
+    "8000": {
+      "label": "Laravel Application",
+      "onAutoForward": "notify"
+    },
+    "7474": {
+      "label": "Neo4j HTTP Browser",
+      "onAutoForward": "ignore"
+    },
+    "7687": {
+      "label": "Neo4j Bolt Port",
+      "onAutoForward": "ignore"
+    }
+  }
+}

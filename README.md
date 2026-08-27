@@ -1,6 +1,7 @@
 # Koel × Neo4j Laravel Boost — Example Repository
 
 [![Frontend Unit Tests](https://github.com/koel/koel/actions/workflows/unit-frontend.yml/badge.svg)](https://github.com/koel/koel/actions/workflows/unit-frontend.yml)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Anfwip/Neo4J-Boost-Example)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE.md)
 
 ![Koel Showcase](https://user-images.githubusercontent.com/8056274/115028055-bc02a280-9ec4-11eb-991c-69cd2a45b69c.png)
@@ -28,7 +29,46 @@ Koel is a free, open-source music-streaming solution built on **Laravel 13** and
 
 ---
 
-## Architecture Overview
+## Zero-Install Architecture (GitHub Codespaces + Neo4j Aura)
+
+By combining **GitHub Codespaces** with **Neo4j AuraDB**, you can eliminate the need for local Docker environments, PHP installations, or local database servers. Clicking the launch button provisions a cloud virtual machine pre-wired with PHP 8.3, Composer, Node.js, and pre-installed VS Code extensions, connected directly to a cloud Neo4j graph database.
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Anfwip/Neo4J-Boost-Example)
+
+```
+Browser VS Code / Codespaces
+        │
+        ▼  MCP protocol (STDIO via php artisan boost:mcp)
+php artisan boost:mcp          ← MCP server running inside cloud dev container
+        │
+        ├── Laravel Boost tools
+        └── Neo4j Boost tools
+                │
+                ▼  Bolt over SSL / 7687 (neo4j+s://<aura-db-id>.databases.neo4j.io:7687)
+           Neo4j AuraDB (Cloud Instance)
+```
+
+### Zero-Install Quick Start Steps
+
+1. **Launch Codespace**: Click the **Open in GitHub Codespaces** badge above (or navigate to `https://codespaces.new/Anfwip/Neo4J-Boost-Example`).
+2. **Provision Neo4j Aura**: Create a free Neo4j AuraDB instance at [neo4j.com/cloud/aura](https://neo4j.com/cloud/aura/).
+3. **Configure Environment Credentials**:
+   The `.devcontainer` configuration automatically initializes `.env` from `.env.example` and runs `composer install` and `npm install` upon creation. Open `.env` in Codespaces and paste your Aura connection details:
+   ```env
+   NEO4J_URI=neo4j+s://<your-aura-db-id>.databases.neo4j.io:7687
+   NEO4J_USERNAME=neo4j
+   NEO4J_PASSWORD=your-aura-db-password
+   ```
+4. **Export Container Graph**: In the Codespace terminal, run:
+   ```bash
+   php artisan container:graph
+   ```
+   This exports Koel's application dependency graph directly into your remote Neo4j AuraDB instance.
+5. **Start Exploring**: Your AI coding assistant can now query the live Neo4j Aura graph using `php artisan boost:mcp`.
+
+---
+
+## Architecture Overview (Local Docker)
 
 ```
 AI Client (Cursor / Claude Code)
