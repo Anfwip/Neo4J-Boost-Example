@@ -72,21 +72,16 @@ cp .env.example .env
 > The `.env.example` ships with the correct values for Docker Compose (`DB_HOST=database`, `NEO4J_URI=bolt://neo4j:7687`).
 > If you run outside Docker, change `database` → `127.0.0.1` and `neo4j` → `localhost`.
 
-### 3. Install PHP dependencies
+### 3. Install PHP dependencies (Optional if using Docker)
 
 ```bash
 composer install --no-interaction
 ```
+*(If running purely in Docker, Docker builds and installs dependencies automatically inside the container during step 4).*
 
 > **Tip:** If running on a host machine with a different PHP version (e.g. PHP 8.1 or 8.2), append `--ignore-platform-reqs`: `composer install --no-interaction --ignore-platform-reqs`.
 
-### 4. Generate the app key
-
-```bash
-php artisan key:generate
-```
-
-### 5. Start all containers
+### 4. Start all containers
 
 ```bash
 docker compose up -d --build --remove-orphans
@@ -102,22 +97,27 @@ This starts three services:
 
 > **Troubleshooting Note:** If Docker reports port conflicts (e.g. ports `7474`/`7687` or `8000` already bound by existing containers), stop or remove conflicting containers via `docker stop <container_name>` before starting.
 
-### 6. Run migrations
+### 5. Generate app key & run migrations
 
 ```bash
+docker compose exec app php artisan key:generate
 docker compose exec app php artisan migrate --force
 ```
 
-### 7. Install MCP binary and verify connection
+*(Optional: To create an admin user for the Koel web interface at `http://localhost:8000`, run `docker compose exec app php artisan koel:init`).*
+
+### 6. Install MCP binary and verify connection
 
 ```bash
 docker compose exec app php artisan neo4j-boost:install-mcp
 docker compose exec app php artisan neo4j-boost:doctor --no-interaction
 ```
 
-Expected output (transport = `driver`, binary = `installed`, password = `set`). Note: `Neo4j MCP HTTP ... not reachable` is expected when using `NEO4J_MCP_TRANSPORT=driver`.
+Expected output (`transport` = `driver`, `binary` = `installed`, `password` = `set`). Note: `Neo4j MCP HTTP ... not reachable` is expected when using `NEO4J_MCP_TRANSPORT=driver`.
 
-### 8. Export Koel's container dependency graph into Neo4j
+> ⚠️ **Important for Cursor Users:** Running `install-mcp` or `cursor-config` inside artisan auto-generates host-level config (`"command": "php"`). For Docker setups, make sure your `.cursor/mcp.json` remains configured with `"command": "docker"` and `"args": ["compose", "exec", "-T", "app", "php", "artisan", "boost:mcp"]`.
+
+### 7. Export Koel's container dependency graph into Neo4j
 
 ```bash
 docker compose exec app php artisan container:graph
@@ -133,7 +133,7 @@ This introspects **1 146 classes, 249 routes, 1 620 middleware links, 304 bindin
 
 ### MCP Configuration (all clients)
 
-The MCP server entry is **already written** to `.mcp.json` (for Cursor/VS Code) and `.cursor/mcp.json`. The entry is:
+The MCP server entry is **already written** to `.mcp.json` (for VS Code / Claude Code) and `.cursor/mcp.json`. The entry is:
 
 ```json
 {
@@ -154,9 +154,17 @@ The MCP server entry is **already written** to `.mcp.json` (for Cursor/VS Code) 
 
 > **Important for Docker Setup:** `.cursor/mcp.json` must specify `"command": "docker"` with `"args": ["compose", "exec", "-T", "app", "php", "artisan", "boost:mcp"]` (already configured in this repo). If you run `php artisan neo4j-boost:cursor-config` or `install-mcp`, verify that `.cursor/mcp.json` remains set to `docker compose exec` so Cursor connects to the container network (`bolt://neo4j:7687`).
 
+---
+
 ### Claude Code
 
-Add the entry above to your Claude Code MCP config, or run `claude mcp add` pointing to `php artisan boost:mcp`. Open this repo as the workspace so `artisan` is on the path.
+Add the MCP entry to your Claude Code configuration by running:
+
+```bash
+claude mcp add laravel-boost -- docker compose exec -T app php artisan boost:mcp
+```
+
+Or copy `.mcp.json` into your workspace root. Open this repo as the workspace so Docker Compose can resolve the running container.
 
 ---
 
