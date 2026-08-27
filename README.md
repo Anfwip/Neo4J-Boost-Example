@@ -99,7 +99,7 @@ This starts three containers:
 | `koel-database` | MariaDB 10.11, Koel's relational data |
 | `neo4j-boost-example` | Neo4j 5 Community, graph DB, Browser on `http://localhost:7474` |
 
-> **Troubleshooting Note:** If Docker reports port conflicts (e.g. ports `7474`/`7687` already bound by `neo4j-laravel-neo4j-1`), stop conflicting containers via `docker stop <container_name>` before starting.
+> **Troubleshooting Note:** If Docker reports port conflicts (e.g. ports `7474`/`7687` already bound) or container name conflicts (e.g. `koel-app`, `koel-database`, `neo4j-boost-example` already in use), stop and remove conflicting containers via `docker rm -f koel-app koel-database neo4j-boost-example` before starting.
 
 ### 6. Run migrations
 
@@ -114,7 +114,7 @@ docker compose exec app php artisan neo4j-boost:install-mcp
 docker compose exec app php artisan neo4j-boost:doctor --no-interaction
 ```
 
-Expected output (transport = `driver`, binary = `installed`, password = `set`).
+Expected output (transport = `driver`, binary = `installed`, password = `set`). Note: `Neo4j MCP HTTP ... not reachable` is expected when using `NEO4J_MCP_TRANSPORT=driver`.
 
 ### 8. Export Koel's container dependency graph into Neo4j
 
@@ -151,11 +151,7 @@ The MCP server entry is **already written** to `.mcp.json` (for Cursor/VS Code) 
 2. Go to **Settings → MCP** and enable the `laravel-boost` server (it auto-discovers `.cursor/mcp.json`).
 3. Reload MCP. You should see tools like `get-schema`, `read-cypher`, `write-cypher`, and `get-class-dependency-graph` in the tool list.
 
-To regenerate the Cursor config at any time:
-
-```bash
-php artisan neo4j-boost:cursor-config
-```
+> **Important for Docker Setup:** `.cursor/mcp.json` must specify `"command": "docker"` with `"args": ["compose", "exec", "-T", "app", "php", "artisan", "boost:mcp"]` (already configured in this repo). If you run `php artisan neo4j-boost:cursor-config` or `install-mcp`, verify that `.cursor/mcp.json` remains set to `docker compose exec` so Cursor connects to the container network (`bolt://neo4j:7687`).
 
 ### Claude Code
 
@@ -203,10 +199,13 @@ Return a table of label → count, ordered by count descending.
 
 | label | count |
 |-------|-------|
-| Instance | 1008 |
-| Identifier | ~900 |
+| Identifier | ~1228 |
+| Instance | ~1198 |
+| Dependency | ~675 |
+| Abstract | ~264 |
 | Route | 249 |
-| Middleware | ~80 |
+| Class | ~224 |
+| Middleware | 23 |
 
 ---
 
@@ -223,7 +222,7 @@ Limit to 10 results.
 
 ```cypher
 MATCH (r:Route)-[:USES_MIDDLEWARE]->(m:Middleware)
-RETURN m.class AS middleware, count(r) AS routeCount
+RETURN m.name AS middleware, count(r) AS routeCount
 ORDER BY routeCount DESC
 LIMIT 10
 ```
@@ -294,8 +293,7 @@ Summarize your findings.
 ├── .mcp.json             # MCP server entry for VS Code / Claude Code
 ├── .cursor/
 │   └── mcp.json          # MCP server entry for Cursor
-├── compose.yaml          # Docker Compose: app + mariadb + neo4j services (also docker-compose.yml)
-├── docker-compose.yml    # Compatibility alias for Docker Compose v1 / legacy CLI
+├── compose.yaml          # Docker Compose: app + mariadb + neo4j services
 ├── Dockerfile            # PHP 8.4-cli + Node 22 + pnpm + composer
 ├── composer.json         # neo4j/laravel-boost listed in require-dev
 └── vendor/
